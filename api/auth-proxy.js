@@ -1,8 +1,9 @@
 import {handleAuthProxyRequest,processAuthMiddleware} from '@neon/auth/server';
-const origin='https://nava-groq-chatbot.vercel.app';
+import {requestOrigin} from '../lib/origins.js';
 const routes=new Map([['get-session','GET'],['token','GET'],['sign-in/social','POST'],['sign-in/email','POST'],['sign-up/email','POST'],['sign-out','POST'],['email-otp/send-verification-otp','POST'],['email-otp/verify-email','POST'],['email-otp/request-password-reset','POST'],['email-otp/reset-password','POST']]);
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
+ const origin=requestOrigin(req);if(!origin)return res.status(403).json({error:'Origin denied'});
  const incoming=new URL(req.url,origin), path=String(req.query?.path??incoming.searchParams.get('path')??'').replace(/^\/+|\/+$/g,'');
  if(path!=='return'&&routes.get(path)!==req.method)return res.status(404).json({error:'Not found'});
  if(path==='return'&&req.method!=='GET')return res.status(405).end();

@@ -32,3 +32,6 @@ For HTTP 429 with provider code 1305 only, retry the selected model at most twic
 
 ## VOST AI 4.0 — rebrand
 Blue/indigo visual identity, responsive layout refinements, approved orbit artwork optimized to WebP, vector VA icon, new favicon and metadata. Existing nava.* browser storage, database schema, API routes, OAuth origin, provider model identifiers, retry behavior and quotas intentionally remain unchanged to preserve accounts and conversation histories.
+
+### 4.1 — custom domain and mobile flow
+Production hosts: https://ai.aminvost.ir and https://nava-groq-chatbot.vercel.app. Both are explicitly allowlisted for auth; Neon trusted origins must include both. Cookies and local chat history are origin-scoped; sign in again on the new domain. New transparent WebP hero, compact safe-area dock, dynamic composer and jump control, no automatic mobile keyboard on new chat. Existing API, quota and database behavior unchanged.
