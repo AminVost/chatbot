@@ -1,6 +1,6 @@
 {
-  "name": "nava-ai",
-  "version": "3.0.0",
+  "name": "vost-ai",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "scripts": {

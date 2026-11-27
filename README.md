@@ -1,10 +1,10 @@
-# NAVA AI / نوا
+# VOST AI
 A lightweight bilingual AI workspace, built with Vite and native JavaScript, served on Vercel. Includes streaming chat, image understanding, speech-to-text, text-to-speech and safety models. Persian uses self-hosted Vazirmatn Variable and logical CSS layout. English LTR is available.
 
 ## Setup
 `npm install`, `npm test`, `npm run build`. For full local API development use `npx vercel dev` with environment variables. The Vite development server alone does not run Vercel functions.
 
-Set GROQ_API_KEY and WORKSPACE_ACCESS_CODE as server-only secrets on Vercel. Alternatively users can enter their own key, held in memory only. The owner's key is never returned to the client. Do not commit secrets. A shared access code is for personal/small trusted use; for multi-tenant deployment add proper authentication and durable per-user quotas. Provider limits and plan availability apply. Model catalog is fetched live from Groq's models endpoint; enterprise/preview models may be unavailable. Voice generation supports English and Saudi Arabic, not Persian. Uploads capped to fit Vercel request size. Chat histories and settings are stored locally in the browser; attachments are not persisted. Clearing site data removes histories. Data sent to Groq is subject to their policy.
+Set GROQ_API_KEY and ZAI_API_KEY as server-only secrets. Authentication uses Neon Auth and PostgreSQL; users do not supply provider keys. Do not commit secrets. Provider limits and plan availability apply. Model catalog is fetched live from Groq's models endpoint; enterprise/preview models may be unavailable. Voice generation supports English and Saudi Arabic, not Persian. Uploads capped to fit Vercel request size. Chat histories and settings are stored locally in the browser; attachments are not persisted. Clearing site data removes histories. Requests are sent to the selected provider, Groq or Z.ai, subject to its policy.
 
 ## NAVA 2
 Adaptive mobile navigation, safe-area layout, touch controls, searchable model catalog, conversation renaming, accessible focus and reduced motion. TTS input follows the documented 200-character limit; account terms must be accepted by the account owner.
@@ -29,3 +29,6 @@ Set ZAI_API_KEY server-side. Only GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flas
 
 ### Z.ai overload recovery
 For HTTP 429 with provider code 1305 only, retry the selected model at most twice with bounded backoff (0.8s, 1.6s, respecting short Retry-After). GLM-4.7-Flash may then fall back once to the free GLM-4.5-Flash. Vision never falls back to text. No retry for billing, quota, permission, network, or interrupted streams. Each provider attempt is reserved and recorded separately; each logical chat turn counts once toward the user quota. One shared 55-second upstream deadline and disconnect cancellation apply. Successful response headers expose actual model and attempt count; frontend records actual model in chat history.
+
+## VOST AI 4.0 — rebrand
+Blue/indigo visual identity, responsive layout refinements, approved orbit artwork optimized to WebP, vector VA icon, new favicon and metadata. Existing nava.* browser storage, database schema, API routes, OAuth origin, provider model identifiers, retry behavior and quotas intentionally remain unchanged to preserve accounts and conversation histories.
