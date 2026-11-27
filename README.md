@@ -35,3 +35,6 @@ Blue/indigo visual identity, responsive layout refinements, approved orbit artwo
 
 ### 4.1 — custom domain and mobile flow
 Production hosts: https://ai.aminvost.ir and https://nava-groq-chatbot.vercel.app. Both are explicitly allowlisted for auth; Neon trusted origins must include both. Cookies and local chat history are origin-scoped; sign in again on the new domain. New transparent WebP hero, compact safe-area dock, dynamic composer and jump control, no automatic mobile keyboard on new chat. Existing API, quota and database behavior unchanged.
+
+### 4.2 — PWA mobile layout
+Manifest, 180px Apple icon, 192/512px install icons and a network-first offline fallback. API/auth/chat content is never cached by the service worker. Standalone iOS uses the large viewport, not the dynamic viewport, with a measured keyboard-aware layout; browser/Android use visual viewport. Safe area is applied once, root stays in normal flow. Supports portrait/phone landscape, reduced motion and pinch zoom. Physical iOS/Android installation tests remain necessary.
