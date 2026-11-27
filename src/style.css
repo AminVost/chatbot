@@ -98,3 +98,38 @@ html,body,#app{height:100%;height:100dvh}body{-webkit-tap-highlight-color:transp
 @media(max-width:800px){.modelbox .nava-model-select{width:104px}.modelbox .nava-model-select .ts-control{min-height:30px;font-size:11px}.modelbox .nava-model-select .ts-dropdown{width:min(275px,calc(100vw - 24px));inset-inline-start:auto;inset-inline-end:0}.nava-select .ts-dropdown .dropdown-input{font-size:16px;min-height:42px}.nava-select .ts-dropdown [data-selectable].option{min-height:46px}.nava-field-select.single .ts-control{min-height:46px}}
 @media(max-width:380px){.modelbox .nava-model-select{width:86px}.modelbox .nava-model-select .ts-dropdown{width:235px}}
 @media(prefers-reduced-motion:reduce){.nava-select .ts-dropdown{animation:none}}
+
+/* Select polish: dedicated indicator column, legible labels, keyboard focus. */
+.nava-select .ts-dropdown [data-selectable].selected:after{content:none}
+.nava-select .ts-dropdown [data-selectable].option{padding:10px 10px;min-height:46px;box-sizing:border-box}
+.nava-select .nava-option{display:grid;grid-template-columns:minmax(0,1fr) 18px;align-items:center;gap:9px;padding:0}
+.nava-select .nava-model-option{grid-template-columns:minmax(0,1fr) auto 18px}
+.nava-select .option-label{min-width:0;overflow-wrap:anywhere}
+.nava-select .option-label strong,.nava-select .option-label small{display:block;text-align:left;line-height:1.45;overflow-wrap:anywhere}
+[dir=rtl] .nava-select .option-label strong,[dir=rtl] .nava-select .option-label small{text-align:right}
+.nava-select .option-label strong{font-size:12px;font-weight:650}
+.nava-select .option-label small{font-size:10px;margin-top:4px}
+.nava-select .model-kind{font-size:10px;padding:3px 6px;border-radius:6px;max-width:76px;white-space:normal;text-align:center;line-height:1.4}
+.nava-select .option-check{width:18px;height:18px;display:grid;place-items:center;visibility:hidden;color:var(--accent)}
+.nava-select .option-check svg{width:16px;height:16px}
+.nava-select .selected .option-check{visibility:visible}
+.nava-select .ts-dropdown [data-selectable].selected{background:color-mix(in srgb,var(--accent) 9%,var(--panel));color:var(--text)}
+.nava-select .ts-dropdown [data-selectable].selected strong{color:var(--accent)}
+.nava-select .ts-dropdown [data-selectable].active:not(.selected){background:var(--raised)}
+.nava-select .ts-dropdown [data-selectable].active.selected{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.nava-select .ts-dropdown-content{padding:6px}
+.nava-select .ts-dropdown .dropdown-input-wrap{position:relative;padding:9px}
+.nava-select .ts-dropdown .dropdown-input-wrap:before{content:"";position:absolute;inset-inline-start:22px;top:50%;width:10px;height:10px;border:1.5px solid var(--muted);border-radius:50%;transform:translateY(-65%);pointer-events:none;box-sizing:border-box}
+.nava-select .ts-dropdown .dropdown-input-wrap:after{content:"";position:absolute;inset-inline-start:31px;top:50%;height:5px;width:1.5px;background:var(--muted);transform:rotate(-42deg);pointer-events:none}
+[dir=rtl] .nava-select .ts-dropdown .dropdown-input-wrap:after{transform:rotate(42deg)}
+.nava-select .ts-dropdown .dropdown-input{padding-inline-start:34px;padding-inline-end:12px;min-height:40px}
+.nava-select .ts-dropdown .dropdown-input:focus{border-color:color-mix(in srgb,var(--accent) 50%,var(--line));outline:none;box-shadow:none}
+.nava-select.single .ts-control:after{content:"";position:absolute;inset-inline-end:13px;inset-inline-start:auto;top:50%;margin:0;width:7px;height:7px;box-sizing:border-box;border:solid var(--muted);border-width:0 1.5px 1.5px 0;transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.nava-select.single.dropdown-active .ts-control:after{border:solid var(--accent);border-width:0 1.5px 1.5px 0;transform:translateY(-25%) rotate(225deg)}
+.nava-select.focus .ts-control{outline:none}
+.nava-select.focus:not(.dropdown-active) .ts-control{outline:2px solid var(--accent);outline-offset:2px}
+.modelbox .nava-model-select.single .ts-control{min-height:34px;border-radius:10px;padding-inline-start:8px;padding-inline-end:24px;align-items:center}
+.modelbox .nava-model-select.single .ts-control:after{inset-inline-end:8px}
+.modelbox .nava-model-select.dropdown-active .ts-control{background:var(--raised);outline:none}
+.modelbox .nava-model-select .ts-control .item{font-size:12px;font-weight:650}
+@media(max-width:800px){.nava-select .ts-dropdown [data-selectable].option{min-height:48px}.modelbox .nava-model-select.single .ts-control{min-height:32px;padding-inline-start:3px;padding-inline-end:17px}.modelbox .nava-model-select.single .ts-control:after{inset-inline-end:4px}.modelbox .nava-model-select .ts-control .item{font-size:11px}.nava-select .nava-model-option{gap:6px}.nava-select .model-kind{font-size:9px;padding:3px 5px}}

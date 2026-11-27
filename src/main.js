@@ -66,8 +66,10 @@ function enhanceSelect(el,isModel=false){
   sortField:[{field:'$order',direction:'asc'}],plugins:['dropdown_input'],
   render:{no_results:()=>'<div class="no-results">'+emptyLabel+'</div>',
    option:(data,escape)=>{
-    if(!isModel)return '<div class="nava-option"><span>'+escape(data.text)+'</span></div>';
-    const info=modelInfo(data.value);return '<div class="nava-option nava-model-option"><div><strong dir="auto">'+escape(data.text)+'</strong><small dir="ltr">'+escape(data.value)+'</small></div><span class="model-kind">'+escape(info.kind==='vision'?'Vision':info.kind==='chat'?'Chat':info.kind.toUpperCase())+'</span></div>';
+    const check='<span class="option-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m3.5 8 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+    if(!isModel)return '<div class="nava-option"><span class="option-label">'+escape(data.text)+'</span>'+check+'</div>';
+    const info=modelInfo(data.value),kind=info.kind||'chat';const kinds=isFa?{chat:'چت',vision:'تصویر',stt:'گفتار به متن',tts:'تولید صوت',safety:'ایمنی'}:{chat:'Chat',vision:'Vision',stt:'STT',tts:'TTS',safety:'Safety'};
+    return '<div class="nava-option nava-model-option"><div class="option-label"><strong dir="ltr">'+escape(data.text)+'</strong><small dir="ltr">'+escape(data.value)+'</small></div><span class="model-kind" dir="auto">'+escape(kinds[kind]||kind.toUpperCase())+'</span>'+check+'</div>';
    }},
   onDropdownOpen(){const control=this;const rect=control.wrapper.getBoundingClientRect();const area=el.closest('.main')?.getBoundingClientRect();const top=Math.max(8,area?.top??8),bottom=Math.min(window.visualViewport?.height??innerHeight,area?.bottom??innerHeight)-8;const down=bottom-rect.bottom,up=rect.top-top;control.wrapper.classList.toggle('nava-up',down<220&&up>down);control.dropdown.style.setProperty('--options-height',Math.max(70,Math.min(290,Math.max(down,up)-65))+'px');if(isModel){const menu=control.dropdown;menu.style.left='';menu.style.right='';const r=menu.getBoundingClientRect();const bounds=el.closest('.workspace')?.getBoundingClientRect();const min=Math.max(8,(bounds?.left??0)+8),max=Math.min(innerWidth-8,(bounds?.right??innerWidth)-8);const shift=r.right>max?max-r.right:r.left<min?min-r.left:0;if(shift){menu.style.right='auto';menu.style.left=(r.left-rect.left+shift)+'px'}}},
   onDropdownClose(){this.wrapper.classList.remove('nava-up');this.dropdown.style.left='';this.dropdown.style.right=''}
