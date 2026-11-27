@@ -1,13 +1,6 @@
-import { timingSafeEqual, createHash } from 'node:crypto';
+import { identity, reserve } from '../lib/account.js';
 import { modelInfo, allowed, voices } from '../lib/models.js';
 const BASE='https://api.groq.com/openai/v1';
-const hash=v=>createHash('sha256').update(v).digest();
-function eq(a,b){return Boolean(a&&b)&&timingSafeEqual(hash(a),hash(b));}
-export function access(headers,env=process.env){
- const personal=headers['x-groq-key']; if(typeof personal==='string'&&/^gsk_[A-Za-z0-9_-]{20,160}$/.test(personal))return personal;
- const code=headers['x-workspace-code']; if(typeof code==='string'&&code.length<256&&eq(code,env.WORKSPACE_ACCESS_CODE))return env.GROQ_API_KEY;
- return null;
-}
 function invalid(message){throw Object.assign(new Error(message),{status:400});}
 export function prepare(body){
  const {op,model}=body;
@@ -52,11 +45,11 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='POST')return res.status(405).json({error:'POST required'});
  const origin=req.headers.origin;if(origin){try{if(new URL(origin).host!==req.headers.host)return res.status(403).json({error:'Origin denied'});}catch{return res.status(403).json({error:'Origin denied'});}}
- const key=access(req.headers);if(!key)return res.status(401).json({error:'Enter a valid workspace access code or your own Groq API key.'});
+ const key=process.env.GROQ_API_KEY;if(!key)return res.status(503).json({error:'Service unavailable'});
  try{
   let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{return res.status(400).json({error:'Invalid JSON'});}
   if(!b||typeof b!=='object'||Array.isArray(b)||JSON.stringify(b).length>4100000)return res.status(413).json({error:'Request too large'});
-  const p=prepare(b), headers={Authorization:'Bearer '+key};
+  const user=await identity(req);if(!user.admin&&b.op==='chat')b.maxTokens=Math.min(Number(b.maxTokens)||1024,1024);const p=prepare(b);await reserve(user,b.op,b.model||'');const headers={Authorization:'Bearer '+key};
   const options={method:p.method||'POST',headers,signal:AbortSignal.timeout(55000)};
   if(p.form)options.body=p.form;else if(p.payload){headers['Content-Type']='application/json';options.body=JSON.stringify(p.payload);}
   const upstream=await fetch(BASE+p.path,options);

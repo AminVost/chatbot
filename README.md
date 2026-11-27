@@ -11,3 +11,6 @@ Adaptive mobile navigation, safe-area layout, touch controls, searchable model c
 
 ## NAVA 2.1
 Text-to-speech voice selection, per-model voice preference, sample texts, character progress, cancellation, validated WAV, responsive keyboard handling, frame-scheduled streaming with final Markdown rendering, and scroll preservation. Live Orpheus requests require the account's accepted terms and available quota.
+
+## Accounts (3.0)
+Managed Neon Auth with Google and verified email, user-specific local conversation history, server-side JWT validation, UTC daily per-user request quotas (default 20; owner exempt from app quotas), account blocking, admin audit logs, and a responsive admin panel. Provider limits still apply to all users. Google shared credentials and shared SMTP are development-grade; configure production OAuth client and SMTP before public launch. Set DATABASE_URL, NEON_AUTH_BASE_URL, NEON_AUTH_JWKS_URL, VITE_NEON_AUTH_URL and GROQ_API_KEY. No workspace code or client API key is used.
