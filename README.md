@@ -44,3 +44,6 @@ Apply migrations/002-security.sql before deploying. Existing owner is bound to t
 
 ### Getting started
 Bilingual help page accessible from navigation and the empty chat, task-based example prompts without auto-submission, model-specific descriptions in the library and a single-line purpose in the selector. New or unrecognized active models receive a conservative description based on the supported operation. Existing authentication, quotas and provider routing are unchanged.
+
+### OpenRouter free integration (staged)
+Before deployment apply migrations/003-openrouter.sql and set OPENROUTER_API_KEY as a server-only secret. The live catalog filters :free and openrouter/free, explicit zero pricing and text output modalities; no stale catalog fallback. Provider max_price=0 and data_collection=deny restrict routing; this may reduce availability. All OR models share 50 attempts/day UTC and 20/minute internal fixed windows, including owner and failed attempts; actual provider limits/account use may differ. One fallback to free auto for text-only 502/503, never for 429 or image model, no cross-provider automatic transfer. Counts are local observed usage, not billing. No audio/image generation is added by this integration. Git auto deployments disabled for openrouter-integration branch; do not merge until real-key tests and migration are completed.

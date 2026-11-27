@@ -2,6 +2,10 @@ import {modelInfo} from '../lib/models.js';
 // [short Persian, short English, full Persian, full English]
 // Descriptions refer to the operations exposed in VOST, not every upstream capability.
 const descriptions={
+ 'or/openrouter/free':['انتخاب خودکار رایگان','Automatic free model','مدل رایگان سازگار را خودکار برای درخواست متنی انتخاب می‌کند؛ مدل واقعی پاسخ‌دهنده ممکن است تغییر کند.','Automatically chooses a compatible free text model; the actual responding model may vary.'],
+ 'or/nvidia/nemotron-3-ultra-550b-a55b:free':['تحلیل و برنامه‌نویسی','Reasoning & coding','برای تحلیل مسئله، استدلال و کمک به نوشتن کد.','For problem analysis, reasoning and coding assistance.'],
+ 'or/nvidia/nemotron-3.5-super-vl:free':['تحلیل عکس و OCR','Images & OCR','برای تحلیل تصویر و استخراج متن از عکس؛ نتیجه را بررسی کنید.','For image understanding and text extraction; verify results.'],
+ 'or/baidu/ernie-5.5-flash-preview:free':['گفتگو و کدنویسی','Chat & coding','برای پرسش متنی، نگارش و کمک به برنامه‌نویسی.','For text questions, writing and coding assistance.'],
  'openai/gpt-oss-120b':['تحلیل و برنامه‌نویسی','Reasoning & coding','برای مسائل چندمرحله‌ای، تحلیل متن، توضیح مفاهیم سخت و کمک به نوشتن یا رفع اشکال کد.','For multi-step questions, text analysis, explaining difficult concepts and coding or debugging.'],
  'openai/gpt-oss-20b':['چت سریع و متن','Quick chat & writing','برای سؤال‌های روزمره، خلاصه‌کردن، ترجمه و نوشتن متن با تمرکز بر سرعت.','For everyday questions, summaries, translation and writing with an emphasis on speed.'],
  'qwen/qwen3.8-27b':['تصویر و خواندن متن','Images & OCR','عکس، اسکرین‌شات یا نوشته داخل تصویر را ارسال کنید تا مدل آن را توضیح دهد یا متنش را استخراج کند. متن استخراج‌شده را بررسی کنید.','Upload a photo or screenshot to describe it or extract its text. Verify extracted text.'],

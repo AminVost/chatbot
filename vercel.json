@@ -69,5 +69,10 @@
       "source": "/api/auth/:path*",
       "destination": "/api/auth-proxy?path=:path*"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "openrouter-integration": false
+    }
+  }
 }

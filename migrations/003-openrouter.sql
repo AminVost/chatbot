@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS nava_or_quota(day date PRIMARY KEY,requests integer NOT NULL DEFAULT 0,minute_bucket timestamptz NOT NULL,minute_requests integer NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS nava_or_usage(model text NOT NULL,day date NOT NULL,requests integer NOT NULL DEFAULT 0,prompt_tokens bigint NOT NULL DEFAULT 0,completion_tokens bigint NOT NULL DEFAULT 0,successes integer NOT NULL DEFAULT 0,failures integer NOT NULL DEFAULT 0,PRIMARY KEY(model,day));
