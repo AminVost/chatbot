@@ -1,6 +1,6 @@
 import { identity, reserve } from '../lib/account.js';
 import { modelInfo, allowed, voices } from '../lib/models.js';
-import {zaiModels,zaiInfo,zaiPayload,usageObserver} from '../lib/providers.js';
+import {zaiModels,zaiInfo,zaiPayload,usageObserver,zaiError} from '../lib/providers.js';
 import {reserveZai,recordZai} from '../lib/zai-usage.js';
 const BASE='https://api.groq.com/openai/v1',ZAI='https://api.z.ai/api/paas/v4';
 function invalid(message){throw Object.assign(new Error(message),{status:400});}
@@ -68,7 +68,7 @@ export default async function handler(req,res){
   if(p.form)options.body=p.form;else if(p.payload){headers['Content-Type']='application/json';options.body=JSON.stringify(p.payload);}
   const upstream=await fetch((isZai?ZAI:BASE)+p.path,options);
   for(const h of ['x-ratelimit-limit-requests','x-ratelimit-remaining-requests','x-ratelimit-limit-tokens','x-ratelimit-remaining-tokens','retry-after']){const v=upstream.headers.get(h);if(v)res.setHeader(h,v);}
-  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';try{const e=await upstream.json();msg=e.error?.message||e.message||msg;}catch{}if(isZai)msg=upstream.status===429?'Z.ai is temporarily overloaded or rate limited. Try another model.':upstream.status===401?'Z.ai credentials rejected':upstream.status===402?'Z.ai account has insufficient balance or model access':'Z.ai request failed ('+upstream.status+')';return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
+  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';let code;try{const e=await upstream.json();msg=e.error?.message||e.message||msg;code=e.error?.code??e.code;}catch{}if(isZai)msg=zaiError(upstream.status,code);return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
   if(b.op==='chat'){
    res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('X-Accel-Buffering','no');res.flushHeaders?.();
    const reader=upstream.body.getReader(),observer=isZai?usageObserver():null;res.on('close',()=>reader.cancel().catch(()=>{}));
