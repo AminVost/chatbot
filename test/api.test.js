@@ -11,3 +11,5 @@ test('safety runs non-streaming',()=>assert.equal(prepare({op:'safety',model:'me
 
 test('Orpheus character limit enforced',()=>assert.throws(()=>prepare({op:'tts',model:'canopylabs/orpheus-v1-english',voice:'troy',input:'a'.repeat(201)})));
 test('Allam classified as chat',()=>assert.equal(modelInfo('allam-2-7b').kind,'chat'));
+
+test('Orpheus allows all official voice IDs',()=>{for(const [model,ids] of [['canopylabs/orpheus-v1-english',['autumn','diana','hannah','austin','daniel','troy']],['canopylabs/orpheus-arabic-saudi',['abdullah','fahad','sultan','lulwa','noura','aisha']]])for(const voice of ids)assert.equal(prepare({op:'tts',model,input:'Hello',voice}).payload.voice,voice)});

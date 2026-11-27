@@ -65,9 +65,9 @@ export default async function handler(req,res){
   if(b.op==='chat'){
    res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('X-Accel-Buffering','no');res.flushHeaders?.();
    const reader=upstream.body.getReader();res.on('close',()=>reader.cancel().catch(()=>{}));
-   try{while(true){const {done,value}=await reader.read();if(done)break;if(!res.write(Buffer.from(value)))await new Promise(resolve=>{res.once('drain',resolve);res.once('close',resolve);});}}catch{if(!res.destroyed)res.write('data: '+JSON.stringify({error:{message:'Stream interrupted'}})+'\n\n');}return res.end();
+   try{while(true){const {done,value}=await reader.read();if(done)break;if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done);});}}catch{if(!res.destroyed)res.write('data: '+JSON.stringify({error:{message:'Stream interrupted'}})+'\n\n');}return res.end();
   }
-  if(b.op==='tts'){res.setHeader('Content-Type','audio/wav');return res.end(Buffer.from(await upstream.arrayBuffer()));}
+  if(b.op==='tts'){const audio=Buffer.from(await upstream.arrayBuffer());if(audio.length<44||audio.subarray(0,4).toString()!=='RIFF'||audio.subarray(8,12).toString()!=='WAVE')return res.status(502).json({error:'Invalid WAV received from Groq'});res.setHeader('Content-Type','audio/wav');res.setHeader('Content-Length',audio.length);return res.end(audio);}
   return res.status(200).json(await upstream.json());
  }catch(e){if(!res.headersSent)return res.status(e.status||502).json({error:e.status?e.message:'Unable to connect to Groq. Please retry.'});res.end();}
 }

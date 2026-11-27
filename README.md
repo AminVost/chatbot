@@ -8,3 +8,6 @@ Set GROQ_API_KEY and WORKSPACE_ACCESS_CODE as server-only secrets on Vercel. Alt
 
 ## NAVA 2
 Adaptive mobile navigation, safe-area layout, touch controls, searchable model catalog, conversation renaming, accessible focus and reduced motion. TTS input follows the documented 200-character limit; account terms must be accepted by the account owner.
+
+## NAVA 2.1
+Text-to-speech voice selection, per-model voice preference, sample texts, character progress, cancellation, validated WAV, responsive keyboard handling, frame-scheduled streaming with final Markdown rendering, and scroll preservation. Live Orpheus requests require the account's accepted terms and available quota.
