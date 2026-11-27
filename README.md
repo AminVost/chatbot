@@ -41,3 +41,6 @@ Manifest, 180px Apple icon, 192/512px install icons and a network-first offline 
 
 ### Security hardening
 Apply migrations/002-security.sql before deploying. Existing owner is bound to the verified database identity; the email alone cannot confer admin access. Auth requests use strict route payloads and same-origin redirects, hashed fixed-window rate limits; authenticated non-admin generation 30/min and catalog 60/min, in addition to existing daily quotas. Groq IDs are checked against the cached account catalog (known-model fallback only when unavailable); Z.ai remains free-only. Markdown is restricted to safe formatting, no embedded form or app action attributes. No user history or existing quota rows are migrated. Provider keys must be rotated if exposed; database rate limit records require retention maintenance.
+
+### Getting started
+Bilingual help page accessible from navigation and the empty chat, task-based example prompts without auto-submission, model-specific descriptions in the library and a single-line purpose in the selector. New or unrecognized active models receive a conservative description based on the supported operation. Existing authentication, quotas and provider routing are unchanged.
