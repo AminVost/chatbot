@@ -14,3 +14,6 @@ Text-to-speech voice selection, per-model voice preference, sample texts, charac
 
 ## Accounts (3.0)
 Managed Neon Auth with Google and verified email, user-specific local conversation history, server-side JWT validation, UTC daily per-user request quotas (default 20; owner exempt from app quotas), account blocking, admin audit logs, and a responsive admin panel. Provider limits still apply to all users. Google shared credentials and shared SMTP are development-grade; configure production OAuth client and SMTP before public launch. Set DATABASE_URL, NEON_AUTH_BASE_URL, NEON_AUTH_JWKS_URL, VITE_NEON_AUTH_URL and GROQ_API_KEY. No workspace code or client API key is used.
+
+### First-party authentication
+Auth requests now use the official framework-neutral Neon Auth server proxy with first-party secure HttpOnly cookies. The Google callback completes the verifier exchange on the same origin. API handlers verify the current server session. Set NEON_AUTH_COOKIE_SECRET (32+ random characters). Existing Google-only accounts can set a password using the email OTP password reset flow.
