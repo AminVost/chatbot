@@ -37,3 +37,25 @@ html,body,#app{height:100%;height:100dvh}body{-webkit-tap-highlight-color:transp
  .dialog .field{font-size:16px;min-height:46px}
 }
 @media(prefers-reduced-motion:reduce){.shell>.side.open{animation:none!important;transition:none!important}}
+
+/* NAVA chat flow 3.2 — stable geometry, responsive streaming, motion-safe feedback. */
+.conversation .msg{content-visibility:visible;contain-intrinsic-size:none;animation:none;min-width:0}
+.conversation .msg.pending,.conversation .msg.user:last-child{animation:appear .2s ease-out}
+.conversation{padding-bottom:30px;gap:25px;min-height:0}
+.main{scroll-behavior:auto;overflow-anchor:none;overscroll-behavior-y:contain}
+.msg-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-height:22px}.msg-head b{font-size:12px;color:var(--text);font-weight:650}.response-state{font-size:11px;color:var(--muted);font-weight:400}
+.thinking-indicator{display:flex;align-items:center;gap:13px;min-height:62px;padding:10px 13px;margin:7px 0 0;width:max-content;max-width:100%;border:1px solid var(--line);background:var(--panel);border-radius:19px;animation:appear .2s ease-out}
+.thinking-orbit{position:relative;width:40px;height:40px;display:grid;place-items:center;isolation:isolate;flex:none;color:var(--accent)}
+.thinking-orbit>span{width:28px;height:28px;border-radius:10px;display:grid;place-items:center;background:var(--raised);z-index:2}
+.thinking-orbit>span svg{width:17px;height:17px}
+.thinking-orbit>i{position:absolute;inset:2px;border-radius:50%;border:1px solid var(--accent);opacity:0;animation:nava-orbit 2.3s ease-out infinite}
+.thinking-orbit>i:nth-child(2){animation-delay:.65s}.thinking-orbit>i:nth-child(3){animation-delay:1.3s}
+@keyframes nava-orbit{0%{transform:scale(.7);opacity:.55}100%{transform:scale(1.28);opacity:0}}
+.thinking-copy{display:grid;gap:5px;min-width:0}.thinking-copy b{font-size:12px;font-weight:600;color:var(--text);line-height:1.5}
+.thinking-dots{display:flex;align-items:center;gap:5px;height:8px}.thinking-dots i{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:nava-dot 1.3s ease-in-out infinite}.thinking-dots i:nth-child(2){animation-delay:.16s}.thinking-dots i:nth-child(3){animation-delay:.32s}@keyframes nava-dot{0%,75%,100%{opacity:.35;transform:translateY(0)}35%{opacity:1;transform:translateY(-3px)}}
+.md.streaming{white-space:normal}.md.streaming::after{width:5px;height:15px;vertical-align:baseline;margin-inline-start:4px}
+.send.is-generating{background:var(--raised);color:var(--text);border:1px solid var(--line)}.send.is-generating svg{width:19px;height:19px;fill:currentColor;stroke-width:1}
+.send:disabled{opacity:.44}.jump{display:grid;place-items:center;inset-inline-end:clamp(12px,calc((100% - 830px)/2 + 8px),70px);bottom:155px;z-index:6;transition:opacity .15s,transform .15s;backdrop-filter:none;background:var(--panel);border:1px solid var(--line)}
+.code-wrap{position:relative;background:var(--side);border:1px solid var(--line);border-radius:14px;margin-block:12px;overflow:hidden;direction:ltr}.code-wrap pre{margin:0;border:0;border-radius:0;padding-top:40px}.code-copy{position:absolute;top:7px;right:8px;z-index:1;font-size:11px;padding:5px 10px;color:var(--muted);border-radius:8px;background:var(--raised)}.code-copy:hover{color:var(--text)}.msg .body{min-width:0}.msg .md{max-width:100%}.msg.user .md{white-space:normal}.msg.assistant .body{width:calc(100% - 45px)}
+@media(max-width:800px){.conversation{gap:20px;padding:20px 14px 24px}.thinking-indicator{padding:9px 11px;min-height:56px;gap:10px}.thinking-orbit{width:34px;height:34px}.thinking-copy b{font-size:12px}.msg-head{gap:6px}.msg.assistant .body{width:calc(100% - 38px)}.jump{inset-inline-end:14px;bottom:216px}.workspace:has(.composer textarea:focus) .jump,.keyboard-open .jump{bottom:138px}.code-copy{min-height:36px}.code-wrap pre{padding-top:49px}.response-state{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.thinking-orbit>i,.thinking-dots i{animation:none!important;opacity:.65;transform:none}.thinking-orbit>i:not(:first-child){display:none}.thinking-indicator{animation:none}}

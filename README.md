@@ -17,3 +17,6 @@ Managed Neon Auth with Google and verified email, user-specific local conversati
 
 ### First-party authentication
 Auth requests now use the official framework-neutral Neon Auth server proxy with first-party secure HttpOnly cookies. The Google callback completes the verifier exchange on the same origin. API handlers verify the current server session. Set NEON_AUTH_COOKIE_SECRET (32+ random characters). Existing Google-only accounts can set a password using the email OTP password reset flow.
+
+## Chat UX 3.2
+Incremental turn rendering keeps existing conversation DOM in place. A controlled smooth scroll reveals each submitted turn, follows streaming only while the reader is at the bottom, and stops when the reader scrolls up. ResizeObserver handles dynamic layout changes, including mobile keyboard and Markdown. A bilingual waiting/processing/writing indicator reflects stream events without exposing reasoning content. Copy-code controls and reduced-motion support included.
