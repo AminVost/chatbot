@@ -20,3 +20,6 @@ Auth requests now use the official framework-neutral Neon Auth server proxy with
 
 ## Chat UX 3.2
 Incremental turn rendering keeps existing conversation DOM in place. A controlled smooth scroll reveals each submitted turn, follows streaming only while the reader is at the bottom, and stops when the reader scrolls up. ResizeObserver handles dynamic layout changes, including mobile keyboard and Markdown. A bilingual waiting/processing/writing indicator reflects stream events without exposing reasoning content. Copy-code controls and reduced-motion support included.
+
+## Searchable dropdowns
+Tom Select powers model, transcription language and speech voice selectors. Search supports labels and model IDs, with keyboard navigation, theme and RTL styling, and instance cleanup when switching tools.

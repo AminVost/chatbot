@@ -15,7 +15,8 @@
     "marked": "^16.0.0",
     "@neon/auth": "0.8.2",
     "@neondatabase/serverless": "1.2.1",
-    "jose": "6.2.18"
+    "jose": "6.2.18",
+    "tom-select": "2.4.3"
   },
   "devDependencies": {
     "vite": "^7.2.2"

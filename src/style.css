@@ -59,3 +59,42 @@ html,body,#app{height:100%;height:100dvh}body{-webkit-tap-highlight-color:transp
 .code-wrap{position:relative;background:var(--side);border:1px solid var(--line);border-radius:14px;margin-block:12px;overflow:hidden;direction:ltr}.code-wrap pre{margin:0;border:0;border-radius:0;padding-top:40px}.code-copy{position:absolute;top:7px;right:8px;z-index:1;font-size:11px;padding:5px 10px;color:var(--muted);border-radius:8px;background:var(--raised)}.code-copy:hover{color:var(--text)}.msg .body{min-width:0}.msg .md{max-width:100%}.msg.user .md{white-space:normal}.msg.assistant .body{width:calc(100% - 45px)}
 @media(max-width:800px){.conversation{gap:20px;padding:20px 14px 24px}.thinking-indicator{padding:9px 11px;min-height:56px;gap:10px}.thinking-orbit{width:34px;height:34px}.thinking-copy b{font-size:12px}.msg-head{gap:6px}.msg.assistant .body{width:calc(100% - 38px)}.jump{inset-inline-end:14px;bottom:216px}.keyboard-open .jump{bottom:138px}.code-copy{min-height:36px}.code-wrap pre{padding-top:49px}.response-state{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.thinking-orbit>i,.thinking-dots i{animation:none!important;opacity:.65;transform:none}.thinking-orbit>i:not(:first-child){display:none}.thinking-indicator{animation:none}}
+
+/* Shared searchable controls — Tom Select, localized and theme-aware. */
+.top{position:relative;z-index:12;overflow:visible}
+.modelbox{min-width:0;overflow:visible;position:relative;gap:6px;padding-inline:10px}
+.nava-select{min-width:0;width:100%;font:inherit;color:var(--text);position:relative}
+.nava-select.single .ts-control,.nava-select.single.input-active .ts-control,.nava-select.single .ts-control:focus{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:none;color:var(--text);font:inherit;min-height:44px;padding:10px 33px 10px 12px;align-items:center;cursor:pointer}
+[dir=rtl] .nava-select.single .ts-control{padding:10px 12px 10px 33px}
+.nava-select.single .ts-control:after{right:13px;left:auto;border-color:var(--muted) transparent transparent;border-width:5px 4px 0}
+[dir=rtl] .nava-select.single .ts-control:after{left:13px;right:auto}
+.nava-select.single.dropdown-active .ts-control:after{border-width:0 4px 5px;border-color:transparent transparent var(--muted)}
+.nava-select .ts-control .item{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)}
+.nava-select.focus .ts-control{outline:2px solid var(--accent);outline-offset:2px}
+.nava-select .ts-dropdown{z-index:40;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:15px;box-shadow:0 12px 36px #0005;overflow:hidden;margin:7px 0 0;text-align:start;font:inherit;min-width:100%;animation:select-in .14s ease-out}
+.nava-select.nava-up .ts-dropdown{top:auto;bottom:100%;margin:0 0 7px}
+@keyframes select-in{from{opacity:.5;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.nava-select .ts-dropdown .dropdown-input-wrap{padding:9px;border-bottom:1px solid var(--line);background:var(--panel)}
+.nava-select .ts-dropdown .dropdown-input{font:inherit;font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:9px;outline:none;width:100%;padding:9px 11px;box-shadow:none;box-sizing:border-box}
+.nava-select .ts-dropdown .dropdown-input:focus{border-color:var(--accent)}
+.nava-select .ts-dropdown-content{max-height:var(--options-height,260px);padding:5px;overscroll-behavior:contain;scrollbar-width:thin}
+.nava-select .ts-dropdown [data-selectable].option{position:relative;border-radius:9px;padding:10px 11px;color:var(--text);background:transparent;min-height:40px;cursor:pointer}
+.nava-select .ts-dropdown [data-selectable].active{background:var(--raised);color:var(--text)}
+.nava-select .ts-dropdown [data-selectable].selected{background:var(--raised);color:var(--accent)}
+.nava-select .ts-dropdown [data-selectable].selected:after{content:"✓";position:absolute;inset-inline-end:9px;top:10px;color:var(--accent)}
+.nava-select .ts-dropdown .no-results{padding:12px;color:var(--muted);font-size:12px}
+.nava-select .ts-dropdown .highlight{background:transparent;text-decoration:underline;color:var(--accent)}
+.nava-select .nava-option{display:flex;gap:8px;align-items:center;justify-content:space-between;padding-inline-end:13px;min-width:0}
+.nava-select .nava-option>div{min-width:0}
+.nava-select .nava-option strong{display:block;font-size:12px;font-weight:650;line-height:1.5}
+.nava-select .nava-option small{display:block;font-size:10px;color:var(--muted);overflow-wrap:anywhere;margin-top:3px;text-align:start}
+.nava-select .model-kind{font-size:9px;white-space:nowrap;color:var(--muted);border:1px solid var(--line);padding:2px 5px;border-radius:6px}
+.nava-select.disabled .ts-control{opacity:.55;cursor:not-allowed}
+.modelbox .nava-model-select{width:155px;flex:1;min-width:0}
+.modelbox .nava-model-select.single .ts-control{background:transparent;border:0;min-height:25px;padding-block:2px;font-size:12px}
+.modelbox .nava-model-select .ts-dropdown{width:285px;max-width:calc(100vw - 24px);inset-inline-end:0;inset-inline-start:auto}
+.nava-field-select.field{padding:0;border:0;background:transparent}
+.nava-select .ts-control input{font:inherit;color:var(--text)}
+@media(max-width:800px){.modelbox .nava-model-select{width:104px}.modelbox .nava-model-select .ts-control{min-height:30px;font-size:11px}.modelbox .nava-model-select .ts-dropdown{width:min(275px,calc(100vw - 24px));inset-inline-start:auto;inset-inline-end:0}.nava-select .ts-dropdown .dropdown-input{font-size:16px;min-height:42px}.nava-select .ts-dropdown [data-selectable].option{min-height:46px}.nava-field-select.single .ts-control{min-height:46px}}
+@media(max-width:380px){.modelbox .nava-model-select{width:86px}.modelbox .nava-model-select .ts-dropdown{width:235px}}
+@media(prefers-reduced-motion:reduce){.nava-select .ts-dropdown{animation:none}}
