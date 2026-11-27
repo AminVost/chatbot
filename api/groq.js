@@ -1,3 +1,7 @@
+import {jsonBody,safeProviderMessage} from '../lib/security.js';
+import {sameOrigin} from '../lib/origins.js';
+import {reserveRate} from '../lib/security-rate.js';
+import {modelCatalog,requireModel} from '../lib/model-catalog.js';
 import { identity, reserve } from '../lib/account.js';
 import { modelInfo, allowed, voices } from '../lib/models.js';
 import {zaiModels,zaiInfo,zaiPayload,usageObserver,zaiError} from '../lib/providers.js';
@@ -6,6 +10,7 @@ import {openZai} from '../lib/zai-retry.js';
 const BASE='https://api.groq.com/openai/v1',ZAI='https://api.z.ai/api/paas/v4';
 function invalid(message){throw Object.assign(new Error(message),{status:400});}
 export function prepare(body){
+ if(!body||typeof body!=='object'||Array.isArray(body))invalid('Invalid request');
  const {op,model}=body;
  if(op==='models')return {path:'/models',method:'GET'};
  if(typeof model!=='string'||!/^[a-zA-Z0-9_.\/-]{1,150}$/.test(model))invalid('Invalid model');
@@ -15,10 +20,11 @@ export function prepare(body){
  if(op==='chat'||op==='safety'){
   if(!Array.isArray(body.messages)||!body.messages.length||body.messages.length>60)invalid('Invalid messages');
   const messages=body.messages.map(m=>{
-   if(!['user','assistant','system'].includes(m.role))invalid('Invalid role');
+   if(!m||typeof m!=='object'||!['user','assistant','system'].includes(m.role))invalid('Invalid role');
    if(typeof m.content==='string'&&m.content.length<=60000)return {role:m.role,content:m.content};
    if(op==='chat'&&info.kind==='vision'&&m.role==='user'&&Array.isArray(m.content)&&m.content.length<=4){
     return {role:m.role,content:m.content.map(p=>{
+     if(!p||typeof p!=='object')invalid('Invalid content item');
      if(p.type==='text'&&typeof p.text==='string'&&p.text.length<=60000)return {type:'text',text:p.text};
      if(p.type==='image_url'&&typeof p.image_url?.url==='string'&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p.image_url.url)&&p.image_url.url.length<2800000)return {type:'image_url',image_url:{url:p.image_url.url}};
      invalid('Invalid image');
@@ -27,7 +33,7 @@ export function prepare(body){
    invalid('Invalid message content');
   });
   const payload={model,messages,stream:op==='chat'};
-  if(op==='chat'){payload.max_completion_tokens=Math.min(8192,Math.max(64,Number(body.maxTokens)||2048));if(!model.includes('gpt-oss')&&!model.includes('compound'))payload.temperature=Math.min(1,Math.max(0,Number(body.temperature??0.7)||0));}
+  if(op==='chat'){payload.max_completion_tokens=Math.trunc(Math.min(8192,Math.max(64,Number(body.maxTokens)||2048)));if(!model.includes('gpt-oss')&&!model.includes('compound'))payload.temperature=Math.min(1,Math.max(0,Number(body.temperature??0.7)||0));}
   return {path:'/chat/completions',payload};
  }
  if(op==='tts'){
@@ -48,28 +54,23 @@ export function prepare(body){
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='POST')return res.status(405).json({error:'POST required'});
- const origin=req.headers.origin;if(origin){try{if(new URL(origin).host!==req.headers.host)return res.status(403).json({error:'Origin denied'});}catch{return res.status(403).json({error:'Origin denied'});}}
+ if(!sameOrigin(req))return res.status(403).json({error:'Origin denied'});
  let zaiDay=null,zaiModel=null,zaiAttempts=0,zaiCode,stats={success:false,prompt:0,completion:0};
  try{
-  let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{return res.status(400).json({error:'Invalid JSON'});}
-  if(!b||typeof b!=='object'||Array.isArray(b)||JSON.stringify(b).length>4100000)return res.status(413).json({error:'Request too large'});
+  const b=jsonBody(req,4100000);
   const user=await identity(req);if(!user.admin&&b.op==='chat')b.maxTokens=Math.min(Number(b.maxTokens)||1024,1024);const p=prepare(b);
-  if(b.op==='models'){
-   let catalog=[];let groqAvailable=false;
-   if(process.env.GROQ_API_KEY)try{const r=await fetch(BASE+'/models',{headers:{Authorization:'Bearer '+process.env.GROQ_API_KEY},signal:AbortSignal.timeout(8000)});if(r.ok){const j=await r.json();if(Array.isArray(j.data)){catalog=j.data;groqAvailable=true}}}catch{}
-   if(process.env.ZAI_API_KEY)catalog.push(...zaiModels.map(m=>({id:m.id,active:true,owned_by:'Z.ai'})));
-   if(!groqAvailable&&!process.env.ZAI_API_KEY)return res.status(503).json({error:'Model catalog temporarily unavailable'});
-   return res.status(200).json({data:catalog});
-  }
+  if(b.op==='models'){if(!user.admin)await reserveRate('catalog',user.id,60,60);return res.status(200).json({data:await modelCatalog()})}
+  if(!user.admin)await reserveRate('generation',user.id,60,30);
+  await requireModel(b.model);
   const isZai=Boolean(zaiInfo(b.model));const key=isZai?process.env.ZAI_API_KEY:process.env.GROQ_API_KEY;if(!key)return res.status(503).json({error:'Provider unavailable'});
   await reserve(user,b.op,b.model||'');
   const headers={Authorization:'Bearer '+key};
-  const options={method:p.method||'POST',headers,signal:AbortSignal.timeout(55000)};
+  const disconnected=new AbortController();res.once('close',()=>disconnected.abort());
+  const options={method:p.method||'POST',headers,redirect:'error',signal:AbortSignal.any([AbortSignal.timeout(55000),disconnected.signal])};
   if(p.form)options.body=p.form;else if(p.payload){headers['Content-Type']='application/json';options.body=JSON.stringify(p.payload);}
   let upstream;
   if(isZai){
-   const disconnected=new AbortController();res.once('close',()=>disconnected.abort());
-   const signal=AbortSignal.any([options.signal,disconnected.signal]);
+   const signal=options.signal;
    const opened=await openZai({model:b.model,signal,reserveAttempt:reserveZai,
     recordAttempt:(model,day,stats)=>recordZai(model,day,stats).catch(()=>console.error('Z.ai usage write failed')),
     fetchAttempt:(model,attemptSignal)=>fetch(ZAI+p.path,{...options,signal:attemptSignal,body:JSON.stringify(zaiPayload({...p.payload,model}))})});
@@ -77,11 +78,11 @@ export default async function handler(req,res){
    res.setHeader('X-Nava-Model',zaiModel);res.setHeader('X-Nava-Attempts',String(zaiAttempts));
   }else upstream=await fetch(BASE+p.path,options);
   for(const h of ['x-ratelimit-limit-requests','x-ratelimit-remaining-requests','x-ratelimit-limit-tokens','x-ratelimit-remaining-tokens','retry-after']){const v=upstream.headers.get(h);if(v)res.setHeader(h,v);}
-  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';let code=zaiCode;if(!isZai)try{const e=await upstream.json();msg=e.error?.message||e.message||msg;code=e.error?.code??e.code;}catch{}if(isZai)msg=zaiError(upstream.status,code);return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
+  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';let code=zaiCode;if(!isZai)try{const e=await upstream.json();msg=e.error?.message||e.message||msg;code=e.error?.code??e.code;}catch{}if(isZai)msg=zaiError(upstream.status,code);return res.status(upstream.status).json({error:safeProviderMessage(msg,[process.env.GROQ_API_KEY,process.env.ZAI_API_KEY])});}
   if(b.op==='chat'){
    res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('X-Accel-Buffering','no');res.flushHeaders?.();
    const reader=upstream.body.getReader(),observer=isZai?usageObserver():null;res.on('close',()=>reader.cancel().catch(()=>{}));
-   try{while(true){const {done,value}=await reader.read();if(done)break;observer?.push(value);if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done);});}}catch{if(!res.destroyed)res.write('data: '+JSON.stringify({error:{message:'Stream interrupted'}})+'\n\n');}if(observer)stats=observer.finish();if(zaiDay){await recordZai(zaiModel,zaiDay,stats).catch(()=>console.error('Z.ai usage write failed'));zaiDay=null}return res.end();
+   try{let sent=0;while(true){const {done,value}=await reader.read();if(done)break;sent+=value.byteLength;if(sent>8_000_000){await reader.cancel();throw Error('Response too large')}observer?.push(value);if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done);});}}catch{if(!res.destroyed)res.write('data: '+JSON.stringify({error:{message:'Stream interrupted'}})+'\n\n');}if(observer)stats=observer.finish();if(zaiDay){await recordZai(zaiModel,zaiDay,stats).catch(()=>console.error('Z.ai usage write failed'));zaiDay=null}return res.end();
   }
   if(b.op==='tts'){const audio=Buffer.from(await upstream.arrayBuffer());if(audio.length<44||audio.subarray(0,4).toString()!=='RIFF'||audio.subarray(8,12).toString()!=='WAVE')return res.status(502).json({error:'Invalid WAV received from Groq'});res.setHeader('Content-Type','audio/wav');res.setHeader('Content-Length',audio.length);return res.end(audio);}
   return res.status(200).json(await upstream.json());

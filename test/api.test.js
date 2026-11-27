@@ -13,7 +13,7 @@ test('Allam classified as chat',()=>assert.equal(modelInfo('allam-2-7b').kind,'c
 test('Orpheus allows all official voice IDs',()=>{for(const [model,ids] of [['canopylabs/orpheus-v1-english',['autumn','diana','hannah','austin','daniel','troy']],['canopylabs/orpheus-arabic-saudi',['abdullah','fahad','sultan','lulwa','noura','aisha']]])for(const voice of ids)assert.equal(prepare({op:'tts',model,input:'Hello',voice}).payload.voice,voice)});
 
 import {isOwner,sameOrigin} from '../lib/account.js';
-test('owner must be verified and exact email',()=>{assert.equal(isOwner('aminvost@gmail.com',true),true);assert.equal(isOwner('aminvost@gmail.com',false),false);assert.equal(isOwner('other@gmail.com',true),false)});
+test('owner must be verified, exact email and bound UUID',()=>{const id='123e4567-e89b-12d3-a456-426614174000';assert.equal(isOwner('aminvost@gmail.com',true,id,id),true);assert.equal(isOwner('aminvost@gmail.com',false,id,id),false);assert.equal(isOwner('other@gmail.com',true,id,id),false);assert.equal(isOwner('aminvost@gmail.com',true,id,'other'),false)});
 test('origin restriction',()=>{assert.equal(sameOrigin({headers:{origin:'https://evil.test',host:'nava-groq-chatbot.vercel.app'}}),false);assert.equal(sameOrigin({headers:{origin:'https://nava-groq-chatbot.vercel.app',host:'nava-groq-chatbot.vercel.app'}}),true)});
 
 import {zaiModels,zaiPayload,usageObserver,ZAI_LIMITS} from '../lib/providers.js';
