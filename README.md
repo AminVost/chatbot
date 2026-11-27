@@ -23,3 +23,6 @@ Incremental turn rendering keeps existing conversation DOM in place. A controlle
 
 ## Searchable dropdowns
 Tom Select powers model, transcription language and speech voice selectors. Search supports labels and model IDs, with keyboard navigation, theme and RTL styling, and instance cleanup when switching tools.
+
+## Z.ai integration
+Set ZAI_API_KEY server-side. Only GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash (documented free models) are enabled, with provider-prefixed IDs, independent routing and SSE usage monitoring. Z.ai app-wide per-model protection: 150 attempts/day UTC and 5/minute, including owner. User quotas remain shared with Groq; attempts count even when provider returns an error. Paid models are not enabled. Apply nava_zai_usage migration before deployment. Provider rate limits may be lower or change; 429 is surfaced without retry storms. Admin sees observed tokens and attempts, not a provider billing statement.

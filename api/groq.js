@@ -1,11 +1,14 @@
 import { identity, reserve } from '../lib/account.js';
 import { modelInfo, allowed, voices } from '../lib/models.js';
-const BASE='https://api.groq.com/openai/v1';
+import {zaiModels,zaiInfo,zaiPayload,usageObserver} from '../lib/providers.js';
+import {reserveZai,recordZai} from '../lib/zai-usage.js';
+const BASE='https://api.groq.com/openai/v1',ZAI='https://api.z.ai/api/paas/v4';
 function invalid(message){throw Object.assign(new Error(message),{status:400});}
 export function prepare(body){
  const {op,model}=body;
  if(op==='models')return {path:'/models',method:'GET'};
  if(typeof model!=='string'||!/^[a-zA-Z0-9_.\/-]{1,150}$/.test(model))invalid('Invalid model');
+ if(model.startsWith('zai/')&&!zaiInfo(model))invalid('Z.ai model not enabled (free models only)');
  const info=modelInfo(model);
  if(!allowed(info.kind,op))invalid('Model and operation are incompatible');
  if(op==='chat'||op==='safety'){
@@ -45,22 +48,33 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='POST')return res.status(405).json({error:'POST required'});
  const origin=req.headers.origin;if(origin){try{if(new URL(origin).host!==req.headers.host)return res.status(403).json({error:'Origin denied'});}catch{return res.status(403).json({error:'Origin denied'});}}
- const key=process.env.GROQ_API_KEY;if(!key)return res.status(503).json({error:'Service unavailable'});
+ let zaiDay=null,zaiModel=null,stats={success:false,prompt:0,completion:0};
  try{
   let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{return res.status(400).json({error:'Invalid JSON'});}
   if(!b||typeof b!=='object'||Array.isArray(b)||JSON.stringify(b).length>4100000)return res.status(413).json({error:'Request too large'});
-  const user=await identity(req);if(!user.admin&&b.op==='chat')b.maxTokens=Math.min(Number(b.maxTokens)||1024,1024);const p=prepare(b);await reserve(user,b.op,b.model||'');const headers={Authorization:'Bearer '+key};
+  const user=await identity(req);if(!user.admin&&b.op==='chat')b.maxTokens=Math.min(Number(b.maxTokens)||1024,1024);const p=prepare(b);
+  if(b.op==='models'){
+   let catalog=[];let groqAvailable=false;
+   if(process.env.GROQ_API_KEY)try{const r=await fetch(BASE+'/models',{headers:{Authorization:'Bearer '+process.env.GROQ_API_KEY},signal:AbortSignal.timeout(8000)});if(r.ok){const j=await r.json();if(Array.isArray(j.data)){catalog=j.data;groqAvailable=true}}}catch{}
+   if(process.env.ZAI_API_KEY)catalog.push(...zaiModels.map(m=>({id:m.id,active:true,owned_by:'Z.ai'})));
+   if(!groqAvailable&&!process.env.ZAI_API_KEY)return res.status(503).json({error:'Model catalog temporarily unavailable'});
+   return res.status(200).json({data:catalog});
+  }
+  const isZai=Boolean(zaiInfo(b.model));const key=isZai?process.env.ZAI_API_KEY:process.env.GROQ_API_KEY;if(!key)return res.status(503).json({error:'Provider unavailable'});
+  if(isZai)p.payload=zaiPayload(p.payload);
+  await reserve(user,b.op,b.model||'');if(isZai){zaiDay=await reserveZai(b.model);zaiModel=b.model}
+  const headers={Authorization:'Bearer '+key};
   const options={method:p.method||'POST',headers,signal:AbortSignal.timeout(55000)};
   if(p.form)options.body=p.form;else if(p.payload){headers['Content-Type']='application/json';options.body=JSON.stringify(p.payload);}
-  const upstream=await fetch(BASE+p.path,options);
+  const upstream=await fetch((isZai?ZAI:BASE)+p.path,options);
   for(const h of ['x-ratelimit-limit-requests','x-ratelimit-remaining-requests','x-ratelimit-limit-tokens','x-ratelimit-remaining-tokens','retry-after']){const v=upstream.headers.get(h);if(v)res.setHeader(h,v);}
-  if(!upstream.ok){let msg='Groq request failed';try{msg=(await upstream.json()).error?.message||msg;}catch{}return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
+  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';try{const e=await upstream.json();msg=e.error?.message||e.message||msg;}catch{}if(isZai)msg=upstream.status===429?'Z.ai is temporarily overloaded or rate limited. Try another model.':upstream.status===401?'Z.ai credentials rejected':upstream.status===402?'Z.ai account has insufficient balance or model access':'Z.ai request failed ('+upstream.status+')';return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
   if(b.op==='chat'){
    res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('X-Accel-Buffering','no');res.flushHeaders?.();
-   const reader=upstream.body.getReader();res.on('close',()=>reader.cancel().catch(()=>{}));
-   try{while(true){const {done,value}=await reader.read();if(done)break;if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done);});}}catch{if(!res.destroyed)res.write('data: '+JSON.stringify({error:{message:'Stream interrupted'}})+'\n\n');}return res.end();
+   const reader=upstream.body.getReader(),observer=isZai?usageObserver():null;res.on('close',()=>reader.cancel().catch(()=>{}));
+   try{while(true){const {done,value}=await reader.read();if(done)break;observer?.push(value);if(!res.write(Buffer.from(value)))await new Promise(resolve=>{const done=()=>{res.off('drain',done);res.off('close',done);resolve()};res.once('drain',done);res.once('close',done);});}}catch{if(!res.destroyed)res.write('data: '+JSON.stringify({error:{message:'Stream interrupted'}})+'\n\n');}if(observer)stats=observer.finish();if(zaiDay){await recordZai(zaiModel,zaiDay,stats).catch(()=>console.error('Z.ai usage write failed'));zaiDay=null}return res.end();
   }
   if(b.op==='tts'){const audio=Buffer.from(await upstream.arrayBuffer());if(audio.length<44||audio.subarray(0,4).toString()!=='RIFF'||audio.subarray(8,12).toString()!=='WAVE')return res.status(502).json({error:'Invalid WAV received from Groq'});res.setHeader('Content-Type','audio/wav');res.setHeader('Content-Length',audio.length);return res.end(audio);}
   return res.status(200).json(await upstream.json());
- }catch(e){if(!res.headersSent)return res.status(e.status||502).json({error:e.status?e.message:'Unable to connect to Groq. Please retry.'});res.end();}
+ }catch(e){if(!res.headersSent)return res.status(e.status||502).json({error:e.status?e.message:'Unable to connect to AI provider. Please retry.'});res.end();}finally{if(zaiDay)await recordZai(zaiModel,zaiDay,stats).catch(()=>console.error('Z.ai usage write failed'))}
 }
