@@ -2,6 +2,7 @@ import { identity, reserve } from '../lib/account.js';
 import { modelInfo, allowed, voices } from '../lib/models.js';
 import {zaiModels,zaiInfo,zaiPayload,usageObserver,zaiError} from '../lib/providers.js';
 import {reserveZai,recordZai} from '../lib/zai-usage.js';
+import {openZai} from '../lib/zai-retry.js';
 const BASE='https://api.groq.com/openai/v1',ZAI='https://api.z.ai/api/paas/v4';
 function invalid(message){throw Object.assign(new Error(message),{status:400});}
 export function prepare(body){
@@ -48,7 +49,7 @@ export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='POST')return res.status(405).json({error:'POST required'});
  const origin=req.headers.origin;if(origin){try{if(new URL(origin).host!==req.headers.host)return res.status(403).json({error:'Origin denied'});}catch{return res.status(403).json({error:'Origin denied'});}}
- let zaiDay=null,zaiModel=null,stats={success:false,prompt:0,completion:0};
+ let zaiDay=null,zaiModel=null,zaiAttempts=0,zaiCode,stats={success:false,prompt:0,completion:0};
  try{
   let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{return res.status(400).json({error:'Invalid JSON'});}
   if(!b||typeof b!=='object'||Array.isArray(b)||JSON.stringify(b).length>4100000)return res.status(413).json({error:'Request too large'});
@@ -61,14 +62,22 @@ export default async function handler(req,res){
    return res.status(200).json({data:catalog});
   }
   const isZai=Boolean(zaiInfo(b.model));const key=isZai?process.env.ZAI_API_KEY:process.env.GROQ_API_KEY;if(!key)return res.status(503).json({error:'Provider unavailable'});
-  if(isZai)p.payload=zaiPayload(p.payload);
-  await reserve(user,b.op,b.model||'');if(isZai){zaiDay=await reserveZai(b.model);zaiModel=b.model}
+  await reserve(user,b.op,b.model||'');
   const headers={Authorization:'Bearer '+key};
   const options={method:p.method||'POST',headers,signal:AbortSignal.timeout(55000)};
   if(p.form)options.body=p.form;else if(p.payload){headers['Content-Type']='application/json';options.body=JSON.stringify(p.payload);}
-  const upstream=await fetch((isZai?ZAI:BASE)+p.path,options);
+  let upstream;
+  if(isZai){
+   const disconnected=new AbortController();res.once('close',()=>disconnected.abort());
+   const signal=AbortSignal.any([options.signal,disconnected.signal]);
+   const opened=await openZai({model:b.model,signal,reserveAttempt:reserveZai,
+    recordAttempt:(model,day,stats)=>recordZai(model,day,stats).catch(()=>console.error('Z.ai usage write failed')),
+    fetchAttempt:(model,attemptSignal)=>fetch(ZAI+p.path,{...options,signal:attemptSignal,body:JSON.stringify(zaiPayload({...p.payload,model}))})});
+   upstream=opened.response;zaiDay=opened.day??null;zaiModel=opened.model;zaiAttempts=opened.attempts;zaiCode=opened.code;
+   res.setHeader('X-Nava-Model',zaiModel);res.setHeader('X-Nava-Attempts',String(zaiAttempts));
+  }else upstream=await fetch(BASE+p.path,options);
   for(const h of ['x-ratelimit-limit-requests','x-ratelimit-remaining-requests','x-ratelimit-limit-tokens','x-ratelimit-remaining-tokens','retry-after']){const v=upstream.headers.get(h);if(v)res.setHeader(h,v);}
-  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';let code;try{const e=await upstream.json();msg=e.error?.message||e.message||msg;code=e.error?.code??e.code;}catch{}if(isZai)msg=zaiError(upstream.status,code);return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
+  if(!upstream.ok){let msg=(isZai?'Z.ai':'Groq')+' request failed';let code=zaiCode;if(!isZai)try{const e=await upstream.json();msg=e.error?.message||e.message||msg;code=e.error?.code??e.code;}catch{}if(isZai)msg=zaiError(upstream.status,code);return res.status(upstream.status).json({error:String(msg).replace(/gsk_[\w-]+/g,'[redacted]').slice(0,500)});}
   if(b.op==='chat'){
    res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('X-Accel-Buffering','no');res.flushHeaders?.();
    const reader=upstream.body.getReader(),observer=isZai?usageObserver():null;res.on('close',()=>reader.cancel().catch(()=>{}));

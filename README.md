@@ -26,3 +26,6 @@ Tom Select powers model, transcription language and speech voice selectors. Sear
 
 ## Z.ai integration
 Set ZAI_API_KEY server-side. Only GLM-4.7-Flash, GLM-4.5-Flash and GLM-4.6V-Flash (documented free models) are enabled, with provider-prefixed IDs, independent routing and SSE usage monitoring. Z.ai app-wide per-model protection: 150 attempts/day UTC and 5/minute, including owner. User quotas remain shared with Groq; attempts count even when provider returns an error. Paid models are not enabled. Apply nava_zai_usage migration before deployment. Provider rate limits may be lower or change; 429 is surfaced without retry storms. Admin sees observed tokens and attempts, not a provider billing statement.
+
+### Z.ai overload recovery
+For HTTP 429 with provider code 1305 only, retry the selected model at most twice with bounded backoff (0.8s, 1.6s, respecting short Retry-After). GLM-4.7-Flash may then fall back once to the free GLM-4.5-Flash. Vision never falls back to text. No retry for billing, quota, permission, network, or interrupted streams. Each provider attempt is reserved and recorded separately; each logical chat turn counts once toward the user quota. One shared 55-second upstream deadline and disconnect cancellation apply. Successful response headers expose actual model and attempt count; frontend records actual model in chat history.
