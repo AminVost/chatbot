@@ -2,7 +2,14 @@ import {modelInfo} from '../lib/models.js';
 // [short Persian, short English, full Persian, full English]
 // Descriptions refer to the operations exposed in VOST, not every upstream capability.
 const descriptions={
- 'or/openrouter/free':['انتخاب خودکار رایگان','Automatic free model','مدل رایگان سازگار را خودکار برای درخواست متنی انتخاب می‌کند؛ مدل واقعی پاسخ‌دهنده ممکن است تغییر کند.','Automatically chooses a compatible free text model; the actual responding model may vary.'],
+ 'or/google/gemma-4-26b-a4b-it:free':['متن و فهم تصویر','Text & images','برای پرسش‌های متنی، توضیح عکس و خواندن نوشته‌های داخل تصویر؛ گزینه‌ای با معماری کم‌مصرف‌تر.','For text questions, image explanations and reading text in pictures; uses a sparse architecture.'],
+ 'or/google/gemma-4-31b-it:free':['تحلیل متن و عکس','Text & image analysis','برای تحلیل متن، استدلال و فهم محتوای عکس یا اسکرین‌شات.','For text analysis, reasoning and understanding photos or screenshots.'],
+ 'or/liquid/lfm-3-1.7b:free':['پرسش‌های ساده','Simple questions','مدل کوچک برای کارهای متنی ساده، خلاصه و پاسخ‌های ساختاریافته؛ برای مسائل دشوار مدل بزرگ‌تر مناسب‌تر است.','A compact model for simple text tasks, summaries and structured replies; consider larger models for difficult problems.'],
+ 'or/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free':['فهم تصویر و استدلال','Images & reasoning','برای تحلیل تصویر و پاسخ‌های متنی درباره محتوای آن. در VOST تنها ورودی متن و عکس فعال است.','For visual analysis and text responses about images. VOST currently exposes only text and image inputs.'],
+ 'or/nvidia/nemotron-3.5-lightning:free':['چت و کارهای سریع','Fast text tasks','برای کارهای متنی پرتکرار، سؤال‌های کوتاه و کمک به برنامه‌نویسی با تمرکز بر سرعت.','For high-throughput text tasks, short questions and coding assistance.'],
+ 'or/particle-ai/particle-1:free':['کد و اسکرین‌شات','Coding & screenshots','برای برنامه‌نویسی، تحلیل خطا و توضیح اسکرین‌شات؛ در VOST دسترسی مستقیم به ترمینال ندارد.','For coding, debugging and screenshot analysis; it has no direct terminal access in VOST.'],
+ 'or/recursive/flint-v1.0:free':['کدنویسی و رفع خطا','Coding & debugging','برای تحلیل مسئله برنامه‌نویسی، پیشنهاد اصلاح کد و توضیح خطا.','For programming problems, suggested code fixes and error explanations.'],
+ 'or/openrouter/free':['انتخاب خودکار رایگان','Automatic free model','مدل رایگان سازگار با درخواست متنی یا تصویری را خودکار انتخاب می‌کند؛ مدل پاسخ‌دهنده ممکن است تغییر کند.','Automatically chooses a compatible free model for text or images; the responding model may vary.'],
  'or/nvidia/nemotron-3-ultra-550b-a55b:free':['تحلیل و برنامه‌نویسی','Reasoning & coding','برای تحلیل مسئله، استدلال و کمک به نوشتن کد.','For problem analysis, reasoning and coding assistance.'],
  'or/nvidia/nemotron-3.5-super-vl:free':['تحلیل عکس و OCR','Images & OCR','برای تحلیل تصویر و استخراج متن از عکس؛ نتیجه را بررسی کنید.','For image understanding and text extraction; verify results.'],
  'or/baidu/ernie-5.5-flash-preview:free':['گفتگو و کدنویسی','Chat & coding','برای پرسش متنی، نگارش و کمک به برنامه‌نویسی.','For text questions, writing and coding assistance.'],
