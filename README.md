@@ -5,3 +5,6 @@ A lightweight bilingual AI workspace, built with Vite and native JavaScript, ser
 `npm install`, `npm test`, `npm run build`. For full local API development use `npx vercel dev` with environment variables. The Vite development server alone does not run Vercel functions.
 
 Set GROQ_API_KEY and WORKSPACE_ACCESS_CODE as server-only secrets on Vercel. Alternatively users can enter their own key, held in memory only. The owner's key is never returned to the client. Do not commit secrets. A shared access code is for personal/small trusted use; for multi-tenant deployment add proper authentication and durable per-user quotas. Provider limits and plan availability apply. Model catalog is fetched live from Groq's models endpoint; enterprise/preview models may be unavailable. Voice generation supports English and Saudi Arabic, not Persian. Uploads capped to fit Vercel request size. Chat histories and settings are stored locally in the browser; attachments are not persisted. Clearing site data removes histories. Data sent to Groq is subject to their policy.
+
+## NAVA 2
+Adaptive mobile navigation, safe-area layout, touch controls, searchable model catalog, conversation renaming, accessible focus and reduced motion. TTS input follows the documented 200-character limit; account terms must be accepted by the account owner.

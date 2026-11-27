@@ -35,7 +35,7 @@ export function prepare(body){
  }
  if(op==='tts'){
   const list=model.includes('arabic')?voices.ar:voices.en;
-  if(typeof body.input!=='string'||!body.input.trim()||body.input.length>3500||!list.includes(body.voice))invalid('Invalid text or voice');
+  if(typeof body.input!=='string'||!body.input.trim()||body.input.length>200||!list.includes(body.voice))invalid('Invalid text or voice');
   return {path:'/audio/speech',payload:{model,input:body.input,voice:body.voice,response_format:'wav'}};
  }
  if(op==='stt'){
@@ -54,8 +54,8 @@ export default async function handler(req,res){
  const origin=req.headers.origin;if(origin){try{if(new URL(origin).host!==req.headers.host)return res.status(403).json({error:'Origin denied'});}catch{return res.status(403).json({error:'Origin denied'});}}
  const key=access(req.headers);if(!key)return res.status(401).json({error:'Enter a valid workspace access code or your own Groq API key.'});
  try{
-  const b=typeof req.body==='string'?JSON.parse(req.body):req.body;
-  if(!b||typeof b!=='object'||JSON.stringify(b).length>4100000)return res.status(413).json({error:'Request too large'});
+  let b;try{b=typeof req.body==='string'?JSON.parse(req.body):req.body;}catch{return res.status(400).json({error:'Invalid JSON'});}
+  if(!b||typeof b!=='object'||Array.isArray(b)||JSON.stringify(b).length>4100000)return res.status(413).json({error:'Request too large'});
   const p=prepare(b), headers={Authorization:'Bearer '+key};
   const options={method:p.method||'POST',headers,signal:AbortSignal.timeout(55000)};
   if(p.form)options.body=p.form;else if(p.payload){headers['Content-Type']='application/json';options.body=JSON.stringify(p.payload);}

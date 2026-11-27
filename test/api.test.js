@@ -8,3 +8,6 @@ test('vision accepts only supported local images',()=>{const message={role:'user
 test('TTS voice validation',()=>{assert.equal(prepare({op:'tts',model:'canopylabs/orpheus-arabic-saudi',voice:'fahad',input:'سلام'}).payload.voice,'fahad');assert.throws(()=>prepare({op:'tts',model:'canopylabs/orpheus-arabic-saudi',voice:'troy',input:'Hi'}));});
 test('audio form construction',()=>{const p=prepare({op:'stt',model:'whisper-large-v3',file:'YQ==',filename:'test.wav',language:'fa'});assert.equal(p.form.get('language'),'fa');assert.equal(p.form.get('file').name,'test.wav');});
 test('safety runs non-streaming',()=>assert.equal(prepare({op:'safety',model:'meta-llama/llama-prompt-guard-2-22m',messages:[{role:'user',content:'Hello'}]}).payload.stream,false));
+
+test('Orpheus character limit enforced',()=>assert.throws(()=>prepare({op:'tts',model:'canopylabs/orpheus-v1-english',voice:'troy',input:'a'.repeat(201)})));
+test('Allam classified as chat',()=>assert.equal(modelInfo('allam-2-7b').kind,'chat'));
